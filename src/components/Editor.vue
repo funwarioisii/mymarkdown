@@ -14,10 +14,10 @@
         <button class="deleteMemoBtn" @click="deleteMemo" v-if="memos.length > 1">選択中のメモの削除</button>
         <button class="saveMemosBtn" @click="saveMemos">メモの保存</button>
       </div>
-    </div>
-    <textarea class="markdown" v-model="memos[selectedIndex].markdown"></textarea>
+      <textarea class="markdown" v-model="memos[selectedIndex].markdown"></textarea>
 
-    <div class="preview" v-html="preview()"></div>
+      <div class="preview" v-html="preview()"></div>
+    </div>
   </div>
 </template>
 
@@ -35,6 +35,17 @@
         ],
         selectedIndex: 0
       };
+    },
+    created: function () {
+      firebase
+        .database()
+        .ref("memos/"+this.user.uid)
+        .once("value")
+        .then(result => {
+          if (result.val()) {
+            this.memos = result.val();
+          }
+        })
     },
     methods: {
       logout: function () {
@@ -66,6 +77,17 @@
           .ref("memos/" + this.user.uid)
           .set(this.memos)
       }
+    },
+    mounted: function () {
+      document.onkeydown = e => {
+        if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
+          this.saveMemos();
+          return false;
+        }
+      }
+    },
+    beforeDestroy: function() {
+      document.onkeydown = null;
     }
   };
 </script>
@@ -74,27 +96,22 @@
   .editorWrapper {
     display: flex;
   }
-
   .memoListWrapper {
     width: 20%;
     border-top: 1px solid #000;
   }
-
   .memoList {
     padding: 10px;
     box-sizing: border-box;
     text-align: left;
     border-bottom: 1px solid #000;
-
     &:nth-child(even) {
       background-color: #ccc;
     }
-
     &[data-selected="true"] {
       background-color: #ccf;
     }
   }
-
   .memoTitle {
     height: 1.5em;
     margin: 0;
